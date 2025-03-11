@@ -44,26 +44,25 @@ const execCommand = (command) => {
   });
 };
 
-const lipSyncMessage = async (message) => {
+const lipSyncMessage = async (sessionId, messageIndex) => {
   const time = new Date().getTime();
-  console.log(`Starting conversion for message ${message}`);
+  console.log(`Starting conversion for session ${sessionId}, message ${messageIndex}`);
   try {
     await execCommand(
-      `ffmpeg -y -i audios/message_${message}.mp3 audios/message_${message}.wav`
+      `ffmpeg -y -i audios/message_${sessionId}_${messageIndex}.mp3 audios/message_${sessionId}_${messageIndex}.wav`
     );
     console.log(`Conversion done in ${new Date().getTime() - time}ms`);
     
     try {
       await execCommand(
-        `./bin/rhubarb -f json -o audios/message_${message}.json audios/message_${message}.wav -r phonetic`
+        `./bin/rhubarb -f json -o audios/message_${sessionId}_${messageIndex}.json audios/message_${sessionId}_${messageIndex}.wav -r phonetic`
       );
       console.log(`Lip sync done in ${new Date().getTime() - time}ms`);
     } catch (error) {
       console.warn("Lip sync failed, using fallback lip sync data");
       // Create a simple fallback lip sync file
       const fallbackData = {"metadata":{"version":1},"mouthCues":[{"start":0,"end":5,"value":"X"}]};
-      await fs.writeFile(`audios/message_${message}.json`, JSON.stringify(fallbackData), 'utf8');
-      
+      await fs.writeFile(`audios/message_${sessionId}_${messageIndex}.json`, JSON.stringify(fallbackData), 'utf8');
     }
   } catch (error) {
     console.error("Audio conversion failed:", error);
@@ -71,9 +70,12 @@ const lipSyncMessage = async (message) => {
   }
 };
 
-
 app.post("/chat", async (req, res) => {
   const userMessage = req.body.message;
+  
+  // Generate a unique session ID for this request
+  const sessionId = new Date().getTime();
+  
   if (!userMessage) {
     res.send({
       messages: [
@@ -88,6 +90,7 @@ app.post("/chat", async (req, res) => {
     });
     return;
   }
+  
   if (!elevenLabsApiKey || !llamaApiKey) {
     res.send({
       messages: [
@@ -167,9 +170,9 @@ app.post("/chat", async (req, res) => {
     
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i];
-      // generate audio file
-      const fileName = `audios/message_${i}.mp3`; // The name of your audio file
-      const textInput = message.text; // The text you wish to convert to speech
+      // Use unique filenames with sessionId to prevent overwriting
+      const fileName = `audios/message_${sessionId}_${i}.mp3`;
+      const textInput = message.text;
       
       // Use the ElevenLabs instance method
       await elevenLabs.textToSpeech({
@@ -180,10 +183,10 @@ app.post("/chat", async (req, res) => {
         similarityBoost: 0.75
       });
       
-      // generate lipsync
-      await lipSyncMessage(i);
+      // generate lipsync with unique sessionId
+      await lipSyncMessage(sessionId, i);
       message.audio = await audioFileToBase64(fileName);
-      message.lipsync = await readJsonTranscript(`audios/message_${i}.json`);
+      message.lipsync = await readJsonTranscript(`audios/message_${sessionId}_${i}.json`);
     }
 
     res.send({ messages });
@@ -210,6 +213,35 @@ const audioFileToBase64 = async (file) => {
   const data = await fs.readFile(file);
   return data.toString("base64");
 };
+
+// Optional: Add a cleanup function to periodically remove old files
+// This helps prevent your disk from filling up with unused audio files
+const cleanupOldFiles = async () => {
+  try {
+    const files = await fs.readdir('audios');
+    const now = new Date().getTime();
+    const oneHourAgo = now - (60 * 60 * 1000); // 1 hour in milliseconds
+    
+    for (const file of files) {
+      // Only process generated message files, not static files
+      if (file.startsWith('message_') && !file.includes('intro') && !file.includes('api')) {
+        const filePath = `audios/${file}`;
+        const stats = await fs.stat(filePath);
+        
+        // If file is older than one hour, delete it
+        if (stats.mtimeMs < oneHourAgo) {
+          await fs.unlink(filePath);
+          console.log(`Deleted old file: ${filePath}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error during file cleanup:', error);
+  }
+};
+
+// Run cleanup every hour
+setInterval(cleanupOldFiles, 60 * 60 * 1000);
 
 app.listen(port, () => {
   console.log(`Study Buddy listening on port ${port}`);
