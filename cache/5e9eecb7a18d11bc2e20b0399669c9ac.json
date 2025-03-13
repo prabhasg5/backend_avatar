@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "soundFile": "/Users/jayanandaprabhasmekala/repos/Study_Buddy/backend/backend_avatar/audios/message_1741865002592_1.wav",
+    "duration": 3.70
+  },
+  "mouthCues": [
+    { "start": 0.00, "end": 0.20, "value": "X" },
+    { "start": 0.20, "end": 0.38, "value": "B" },
+    { "start": 0.38, "end": 0.45, "value": "H" },
+    { "start": 0.45, "end": 0.52, "value": "D" },
+    { "start": 0.52, "end": 0.87, "value": "B" },
+    { "start": 0.87, "end": 0.94, "value": "E" },
+    { "start": 0.94, "end": 1.29, "value": "F" },
+    { "start": 1.29, "end": 1.49, "value": "B" },
+    { "start": 1.49, "end": 1.57, "value": "A" },
+    { "start": 1.57, "end": 1.70, "value": "E" },
+    { "start": 1.70, "end": 1.77, "value": "B" },
+    { "start": 1.77, "end": 1.98, "value": "F" },
+    { "start": 1.98, "end": 2.05, "value": "B" },
+    { "start": 2.05, "end": 2.37, "value": "X" },
+    { "start": 2.37, "end": 2.43, "value": "B" },
+    { "start": 2.43, "end": 2.55, "value": "C" },
+    { "start": 2.55, "end": 2.69, "value": "B" },
+    { "start": 2.69, "end": 2.76, "value": "C" },
+    { "start": 2.76, "end": 2.97, "value": "E" },
+    { "start": 2.97, "end": 3.11, "value": "B" },
+    { "start": 3.11, "end": 3.18, "value": "E" },
+    { "start": 3.18, "end": 3.32, "value": "G" },
+    { "start": 3.32, "end": 3.46, "value": "B" },
+    { "start": 3.46, "end": 3.70, "value": "X" }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "soundFile": "/Users/jayanandaprabhasmekala/repos/Study_Buddy/backend/backend_avatar/audios/message_1741889914395_1.wav",
+    "duration": 4.67
+  },
+  "mouthCues": [
+    { "start": 0.00, "end": 0.01, "value": "X" },
+    { "start": 0.01, "end": 0.14, "value": "B" },
+    { "start": 0.14, "end": 0.20, "value": "X" },
+    { "start": 0.20, "end": 0.27, "value": "B" },
+    { "start": 0.27, "end": 0.33, "value": "D" },
+    { "start": 0.33, "end": 0.40, "value": "B" },
+    { "start": 0.40, "end": 0.54, "value": "A" },
+    { "start": 0.54, "end": 0.74, "value": "B" },
+    { "start": 0.74, "end": 0.81, "value": "G" },
+    { "start": 0.81, "end": 0.89, "value": "A" },
+    { "start": 0.89, "end": 1.27, "value": "B" },
+    { "start": 1.27, "end": 1.48, "value": "F" },
+    { "start": 1.48, "end": 1.55, "value": "B" },
+    { "start": 1.55, "end": 1.64, "value": "A" },
+    { "start": 1.64, "end": 1.78, "value": "B" },
+    { "start": 1.78, "end": 1.85, "value": "C" },
+    { "start": 1.85, "end": 2.13, "value": "B" },
+    { "start": 2.13, "end": 2.21, "value": "A" },
+    { "start": 2.21, "end": 2.25, "value": "C" },
+    { "start": 2.25, "end": 2.29, "value": "H" },
+    { "start": 2.29, "end": 2.43, "value": "C" },
+    { "start": 2.43, "end": 2.50, "value": "E" },
+    { "start": 2.50, "end": 2.64, "value": "F" },
+    { "start": 2.64, "end": 3.10, "value": "X" },
+    { "start": 3.10, "end": 3.41, "value": "B" },
+    { "start": 3.41, "end": 3.48, "value": "C" },
+    { "start": 3.48, "end": 3.62, "value": "B" },
+    { "start": 3.62, "end": 3.70, "value": "A" },
+    { "start": 3.70, "end": 3.88, "value": "B" },
+    { "start": 3.88, "end": 4.16, "value": "E" },
+    { "start": 4.16, "end": 4.23, "value": "G" },
+    { "start": 4.23, "end": 4.37, "value": "E" },
+    { "start": 4.37, "end": 4.44, "value": "B" },
+    { "start": 4.44, "end": 4.67, "value": "X" }
+  ]
+}
