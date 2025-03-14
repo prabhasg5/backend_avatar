@@ -671,7 +671,7 @@ async function getLlamaResponse(userMessage) {
         messages: [
           {
             role: "system",
-            content: `You are a virtual girlfriend.
+            content: `You are a virtual Tutor, you are helping your student for their exam preperation, you will be always beside them as a Studdy Buddy.
               You will always reply with a JSON array of messages. With a maximum of 3 messages.
               Each message has a text, facialExpression, and animation property.
               The different facial expressions are: smile, sad, angry, surprised, funnyFace, and default.
@@ -694,7 +694,7 @@ async function getLlamaResponse(userMessage) {
         timeout: 7000 // Reduced timeout for faster failure
       }
     );
-    
+  
     let messages;
     try {
       const responseContent = llamaResponse.data.choices?.[0]?.message?.content || "{}";
@@ -743,6 +743,208 @@ async function getLlamaResponse(userMessage) {
         animation: "idle",
       },
     ];
+  }
+}
+/**
+ * Extracts text-only content from Llama response messages
+ * @param {Array} messages - Array of message objects from Llama
+ * @return {string} - Concatenated text content from all messages
+ */
+function extractTextFromLlamaMessages(messages) {
+  if (!Array.isArray(messages)) {
+    console.error("Expected array of messages but received:", typeof messages);
+    return "";
+  }
+  
+  // Extract and join all text fields with a space between each message
+  return messages
+    .map(message => message.text || "")
+    .filter(text => text.trim() !== "")
+    .join(" ");
+}
+
+/**
+ * Sends text to Llama to generate a Mermaid diagram
+ * @param {string} textContent - Text content to convert to a diagram
+ * @return {Promise<string>} - Promise resolving to Mermaid code
+ */
+async function generateMermaidFromText(textContent) {
+  try {
+    const llamaResponse = await axios.post(
+      llamaApiUrl,
+      {
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          {
+            role: "system",
+            content: `You are a diagram assistant. Convert the following text description into valid Mermaid diagram code.
+            Do not include any explanations or comments outside the Mermaid code block.
+            Your response should contain ONLY the Mermaid code. use the following syntax to create a flowchart:
+            %% This is a comment
+
+graph LR  %% Direction (Left to Right)
+    A[Start] -->|User input| B{Decision?}  %% Basic nodes & labeled arrow
+    B -- Yes --> C[Process Data]  %% Conditional flow
+    B -- No --> D[End]
+    C --> E((Final Step))  %% Circular node
+    E -->|Complete| D
+
+    subgraph Additional_Process
+        X[Task X] --> Y[Task Y]  %% Subgraph usage
+    end
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px  %% Styling a node
+    classDef special fill:#ffcccc,stroke:#222;  %% Define a reusable style
+    class C special  %% Apply reusable style
+
+%% Sequence Diagram Example
+sequenceDiagram
+    participant User
+    participant Server
+    User->>Server: Request Data  %% Request message
+    Server-->>User: Send Response  %% Response message
+    activate Server
+    Server->>User: Data Processed  %% Activation
+    deactivate Server
+
+%% Class Diagram Example
+classDiagram
+    class Animal {
+        +String name
+        +void makeSound()
+    }
+    class Dog {
+        +String breed
+        +void bark()
+    }
+    Animal <|-- Dog  %% Inheritance (Dog extends Animal)
+
+%% State Diagram Example
+stateDiagram
+    [*] --> Idle
+    Idle --> Processing : Start Task
+    Processing --> Completed : Task Done
+    Completed --> [*]
+
+%% Gantt Chart Example
+gantt
+    title Project Timeline
+    section Development
+    Task1 :done, 2024-01-01, 5d
+    Task2 :active, 2024-01-06, 10d
+
+%% Pie Chart Example
+pie
+    title Market Share
+    "Apple" : 40
+    "Samsung" : 30
+    "Others" : 30
+    syntax rules: 
+    To write error-free Mermaid.js diagrams, follow these key rules:
+	1.	Correct Arrow Syntax: Always use --> for standard connections and -->|Label|--> for labeled ones. Avoid adding extra symbols like |> or >.
+	2.	Node ID Rules: Node identifiers (e.g., A[Text]) should not contain parentheses ( ). Instead, use spaces, underscores _, or dashes -.
+	3.	Consistent Styling: When defining styles, use style NodeID property; and ensure that classDef rules end with a semicolon (;).
+	4.	Subgraphs Must Be Closed Properly: Every subgraph block should have an end statement to avoid rendering issues.`
+    
+          },
+          {
+            role: "user",
+            content: `Convert this text into an appropriate Mermaid diagram:
+            ${textContent}`
+          }
+        ],
+        max_tokens: 1000,
+        temperature: 0.2,
+        response_format: { type: "text" }
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${llamaApiKey}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000
+      }
+    );
+
+    // Extract Mermaid code from response
+    const mermaidCode = llamaResponse.data.choices[0].message.content.trim();
+    console.log("Generated Mermaid diagram:", mermaidCode);
+    return mermaidCode;
+  } catch (error) {
+    console.error("Error generating Mermaid diagram:", error);
+    return "graph TD\n  A[Error] --> B[Failed to generate diagram]";
+  }
+}
+
+// Store the latest generated Mermaid code
+let currentMermaidCode = "graph TD\n  A[Default] --> B[No diagram generated yet]";
+
+/**
+ * Process Llama responses to extract text and generate Mermaid diagrams
+ * @param {string} userMessage - Original user message
+ * @return {Promise<string>} - Promise resolving to Mermaid code
+ */
+// async function processLlamaResponseToMermaid(userMessage) {
+//   // Get the response from Llama
+//   const llamaMessages = await getLlamaResponse(userMessage);
+  
+//   // Extract just the text content
+//   const textContent = extractTextFromLlamaMessages(llamaMessages);
+  
+//   // Skip if there's no meaningful text content
+//   if (!textContent || textContent.trim() === "") {
+//     console.warn("No text content extracted from Llama response");
+//     currentMermaidCode = "graph TD\n  A[No Content] --> B[No diagram generated]";
+//     return currentMermaidCode;
+//   }
+  
+//   // Generate Mermaid diagram from the text content
+//   const mermaidCode = await generateMermaidFromText(textContent);
+  
+//   // Store the generated code
+//   currentMermaidCode = mermaidCode;
+  
+//   return currentMermaidCode;
+// }
+
+/**
+ * Get the latest generated Mermaid code
+ * @return {string} - The current Mermaid code
+ */
+function getCurrentMermaidCode() {
+  return currentMermaidCode;
+}
+
+// Export functions using ES modules syntax
+export {
+  processLlamaResponseToMermaid,
+  getCurrentMermaidCode,
+  extractTextFromLlamaMessages,
+  generateMermaidFromText
+};
+async function handleUserMessage(req, res) {
+  try {
+    const userMessage = req.body.message; // 🔹 Get user input from request body
+
+    if (!userMessage) {
+      return res.status(400).json({ error: "User message is required." });
+    }
+
+    // 🔹 Fetch Llama response
+    const llamaMessages = await getLlamaResponse(userMessage);
+
+    // 🔹 Process the response to generate a Mermaid diagram
+    const mermaidCode = await processLlamaResponseToMermaid(userMessage);
+
+    // 🔹 Send response back to frontend
+    res.json({
+      messages: llamaMessages,
+      mermaidDiagram: mermaidCode
+    });
+
+  } catch (error) {
+    console.error("Error handling user message:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 }
 
@@ -807,6 +1009,7 @@ app.post("/chat", async (req, res) => {
   if (USE_RESPONSE_CACHE) {
     const requestHash = getRequestHash(userMessage);
     if (responseCache.has(requestHash)) {
+      console.log("💹 Returning cached response");
       return res.send(responseCache.get(requestHash));
     }
   }
@@ -841,6 +1044,7 @@ app.post("/chat", async (req, res) => {
       }
       
       res.send(response);
+      
     } catch (error) {
       console.error("Error loading intro files:", error);
       res.send({
@@ -904,6 +1108,24 @@ app.post("/chat", async (req, res) => {
     // Process messages with more reliable batching
     const processedMessages = await processMessagesWithBatching(messages, sessionId);
     
+    // Generate Mermaid diagram from user message
+    let mermaidCode = null;
+    try {
+      mermaidCode = await processLlamaResponseToMermaid(userMessage);
+      
+      // Log the mermaid code to terminal/console
+      if (mermaidCode) {
+        console.log("\n🔷 MERMAID DIAGRAM GENERATED:");
+        console.log("```mermaid");
+        console.log(mermaidCode);
+        console.log("```\n");
+      } else {
+        console.log("⚠️ No mermaid diagram generated for this query");
+      }
+    } catch (mermaidError) {
+      console.error("Error generating mermaid diagram:", mermaidError);
+    }
+    
     // Add a direct function to validate lip-sync results before sending
     const validateLipsyncData = (lipsync) => {
       // First check if object exists
@@ -963,7 +1185,11 @@ app.post("/chat", async (req, res) => {
       }
     }
     
-    const response = { messages: processedMessages };
+    // Include mermaid diagram in the response
+    const response = { 
+      messages: processedMessages,
+      mermaidDiagram: mermaidCode
+    };
     
     // Cache successful responses if enabled
     if (USE_RESPONSE_CACHE) {
@@ -1011,6 +1237,29 @@ app.post("/chat", async (req, res) => {
   }
 });
 
+// This function is assumed to be defined elsewhere in your code
+async function processLlamaResponseToMermaid(userMessage) {
+  // Get the response from Llama
+  const llamaMessages = await getLlamaResponse(userMessage);
+  
+  // Extract just the text content
+  const textContent = extractTextFromLlamaMessages(llamaMessages);
+  
+  // Skip if there's no meaningful text content
+  if (!textContent || textContent.trim() === "") {
+    console.warn("No text content extracted from Llama response");
+    currentMermaidCode = "graph TD\n  A[No Content] --> B[No diagram generated]";
+    return currentMermaidCode;
+  }
+  
+  // Generate Mermaid diagram from the text content
+  const mermaidCode = await generateMermaidFromText(textContent);
+  
+  // Store the generated code
+  currentMermaidCode = mermaidCode;
+  
+  return currentMermaidCode;
+}
 // Improved cleanup function with batch processing
 const cleanupOldFiles = async () => {
   try {
