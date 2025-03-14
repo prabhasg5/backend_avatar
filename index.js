@@ -682,8 +682,11 @@ async function getLlamaResponse(userMessage) {
             content: userMessage || "Hello"
           }
         ],
-        max_tokens: 800, // Reduced for faster response
-        temperature: 0.6,
+        temperature: 1,
+        max_tokens: 1024,
+        top_p: 1,
+        stream: false,
+        stop: null,
         response_format: { type: "json_object" }
       },
       {
@@ -763,11 +766,6 @@ function extractTextFromLlamaMessages(messages) {
     .join(" ");
 }
 
-/**
- * Sends text to Llama to generate a Mermaid diagram
- * @param {string} textContent - Text content to convert to a diagram
- * @return {Promise<string>} - Promise resolving to Mermaid code
- */
 async function generateMermaidFromText(textContent) {
   try {
     const llamaResponse = await axios.post(
@@ -779,73 +777,8 @@ async function generateMermaidFromText(textContent) {
             role: "system",
             content: `You are a diagram assistant. Convert the following text description into valid Mermaid diagram code.
             Do not include any explanations or comments outside the Mermaid code block.
-            Your response should contain ONLY the Mermaid code. use the following syntax to create a flowchart:
-            %% This is a comment
-
-graph LR  %% Direction (Left to Right)
-    A[Start] -->|User input| B{Decision?}  %% Basic nodes & labeled arrow
-    B -- Yes --> C[Process Data]  %% Conditional flow
-    B -- No --> D[End]
-    C --> E((Final Step))  %% Circular node
-    E -->|Complete| D
-
-    subgraph Additional_Process
-        X[Task X] --> Y[Task Y]  %% Subgraph usage
-    end
-
-    style A fill:#f9f,stroke:#333,stroke-width:2px  %% Styling a node
-    classDef special fill:#ffcccc,stroke:#222;  %% Define a reusable style
-    class C special  %% Apply reusable style
-
-%% Sequence Diagram Example
-sequenceDiagram
-    participant User
-    participant Server
-    User->>Server: Request Data  %% Request message
-    Server-->>User: Send Response  %% Response message
-    activate Server
-    Server->>User: Data Processed  %% Activation
-    deactivate Server
-
-%% Class Diagram Example
-classDiagram
-    class Animal {
-        +String name
-        +void makeSound()
-    }
-    class Dog {
-        +String breed
-        +void bark()
-    }
-    Animal <|-- Dog  %% Inheritance (Dog extends Animal)
-
-%% State Diagram Example
-stateDiagram
-    [*] --> Idle
-    Idle --> Processing : Start Task
-    Processing --> Completed : Task Done
-    Completed --> [*]
-
-%% Gantt Chart Example
-gantt
-    title Project Timeline
-    section Development
-    Task1 :done, 2024-01-01, 5d
-    Task2 :active, 2024-01-06, 10d
-
-%% Pie Chart Example
-pie
-    title Market Share
-    "Apple" : 40
-    "Samsung" : 30
-    "Others" : 30
-    syntax rules: 
-    To write error-free Mermaid.js diagrams, follow these key rules:
-	1.	Correct Arrow Syntax: Always use --> for standard connections and -->|Label|--> for labeled ones. Avoid adding extra symbols like |> or >.
-	2.	Node ID Rules: Node identifiers (e.g., A[Text]) should not contain parentheses ( ). Instead, use spaces, underscores _, or dashes -.
-	3.	Consistent Styling: When defining styles, use style NodeID property; and ensure that classDef rules end with a semicolon (;).
-	4.	Subgraphs Must Be Closed Properly: Every subgraph block should have an end statement to avoid rendering issues.`
-    
+            Your response should contain ONLY the Mermaid code.` 
+            // You can include more instructions if needed, but keeping it simpler might work better
           },
           {
             role: "user",
@@ -853,8 +786,11 @@ pie
             ${textContent}`
           }
         ],
-        max_tokens: 1000,
-        temperature: 0.2,
+        temperature: 1,
+        max_tokens: 1024,
+        top_p: 1,
+        stream: false,
+        stop: null,
         response_format: { type: "text" }
       },
       {
@@ -865,19 +801,31 @@ pie
         timeout: 10000
       }
     );
-
+    
     // Extract Mermaid code from response
-    const mermaidCode = llamaResponse.data.choices[0].message.content.trim();
+    let mermaidCode = llamaResponse.data.choices[0].message.content.trim();
+    
+    // Apply the syntax fixes
+    mermaidCode = fixMermaidSyntax(mermaidCode);
+    
     console.log("Generated Mermaid diagram:", mermaidCode);
     return mermaidCode;
   } catch (error) {
     console.error("Error generating Mermaid diagram:", error);
-    return "graph TD\n  A[Error] --> B[Failed to generate diagram]";
+    return "graph TD\n A[Error] --> B[Failed to generate diagram]";
   }
 }
 
+// Function to fix common Mermaid syntax errors
+function fixMermaidSyntax(code) {
+  return code
+    .replace(/-->\|([^>]*)\|>/g, '-->|$1|') // Fix incorrect arrow syntax
+    .replace(/class\s+(\w+)\s+(\w+)\./g, 'class $1 $2') // Remove periods after class definitions
+    .replace(/;\s*$/gm, '') // Remove trailing semicolons at end of lines if problematic
+}
+
 // Store the latest generated Mermaid code
-let currentMermaidCode = "graph TD\n  A[Default] --> B[No diagram generated yet]";
+let currentMermaidCode = "graph TD\n A[Default] --> B[No diagram generated yet]";
 
 /**
  * Process Llama responses to extract text and generate Mermaid diagrams
